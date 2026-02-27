@@ -1,11 +1,41 @@
+# 📚 Letter of Recommendation (LoR) DApp
 
-# Sample Hardhat 3 Beta Project (minimal)
+A decentralized application (DApp) built using Solidity, Hardhat, React, and Ethers.js that allows adding students, requesting recommendations, approving recommendations, and viewing student details on the Ethereum blockchain.
 
-This project has a minimal setup of Hardhat 3 Beta, without any plugins.
+This project demonstrates full-stack blockchain development including smart contract creation, deployment, and frontend integration.
 
-## What's included?
+---
 
-The project includes native support for TypeScript, Hardhat scripts, tasks, and support for Solidity compilation and tests.
-=======
-# LOR-DAPP
+## 🚀 Features
 
+• Add student details to blockchain  
+• Request Letter of Recommendation (LoR)  
+• Approve recommendations (authorized users only)  
+• View student details and recommendation status  
+• Deploy smart contract using Hardhat  
+• Connect frontend with MetaMask  
+• Deploy to Sepolia testnet  
+
+---
+
+## 🛠 Tech Stack
+
+Frontend:
+- React.js
+- Ethers.js
+- MetaMask
+
+Backend (Blockchain):
+- Solidity
+- Hardhat
+- Ethereum Sepolia Testnet
+- Alchemy RPC
+
+Tools:
+- Node.js
+- Git & GitHub
+- VS Code
+
+---
+
+## 📁 Project Structure
