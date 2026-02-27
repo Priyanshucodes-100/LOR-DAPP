@@ -1,0 +1,11 @@
+{
+  "name": "student-dapp",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@types/node": "^22.19.13",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.22.0",
+    "typescript": "~5.8.0"
+  }
+}
