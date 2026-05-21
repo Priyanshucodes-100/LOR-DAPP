@@ -3,8 +3,8 @@ import { useWeb3 } from "../context/Web3Context";
 
 export default function AdminDashboard() {
   const { contract, user } = useWeb3();
-  const [students, setStudents] = useState([]);
-  const [professors, setProfessors] = useState([]);
+  const [seekers, setSeekers] = useState([]);
+  const [sponsors, setSponsors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [actionMsg, setActionMsg] = useState(null);
@@ -13,9 +13,9 @@ export default function AdminDashboard() {
     if (!contract) return;
     setFetching(true);
     try {
-      const [studs, profs] = await Promise.all([contract.getAllStudents(), contract.getAllProfessors()]);
-      setStudents(studs);
-      setProfessors(profs);
+      const [seeks, spns] = await Promise.all([contract.getAllSeekers(), contract.getAllSponsors()]);
+      setSeekers(seeks);
+      setSponsors(spns);
     } catch (err) { console.error(err); } finally { setFetching(false); }
   }, [contract]);
 
@@ -54,8 +54,8 @@ export default function AdminDashboard() {
 
       <div className="grid-2">
         {[
-          { title: "Students", users: students, icon: "M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2", color: "#6366f1" },
-          { title: "Professors", users: professors, icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", color: "#8b5cf6" },
+          { title: "Seekers", users: seekers, icon: "M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2", color: "#6366f1" },
+          { title: "Sponsors", users: sponsors, icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", color: "#8b5cf6" },
         ].map(section => (
           <div className="card" key={section.title} style={{ padding: 0, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #e7e5e4", background: "#fafafa", display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 14, color: "#1c1917" }}>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { BrowserProvider, Contract } from "ethers";
-import contractABI from "../utils/LORSystem.json";
+import contractABI from "../utils/LetterChain.json";
 import { CONTRACT_ADDRESS, STATUS_LABELS, STATUS_COLORS } from "../utils/constants";
 
 export default function Verify() {
-  const [recId, setRecId] = useState("");
+  const [letterId, setLetterId] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,21 +13,21 @@ export default function Verify() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
-    if (id) { setRecId(id); handleVerify(id); }
+    if (id) { setLetterId(id); handleVerify(id); }
   }, []);
 
   async function handleVerify(id) {
-    const rid = id || recId;
-    if (!rid?.trim()) return;
+    const lid = id || letterId;
+    if (!lid?.trim()) return;
     setLoading(true); setError(null); setResult(null);
     try {
       if (!window.ethereum) { setError("MetaMask not found"); return; }
       const provider = new BrowserProvider(window.ethereum);
       const contract = new Contract(CONTRACT_ADDRESS, contractABI, provider);
-      const d = await contract.verifyRecommendation(rid);
+      const d = await contract.verifyLetter(lid);
       setResult({
-        id: rid, studentName: d.studentName, professorName: d.professorName,
-        title: d.title, letterIpfsHash: d.letterIpfsHash,
+        id: lid, seekerName: d.seekerName, sponsorName: d.sponsorName,
+        title: d.title, ipfsHash: d.ipfsHash,
         status: Number(d.status),
         createdAt: new Date(Number(d.createdAt) * 1000).toLocaleDateString(),
       });
@@ -45,13 +45,13 @@ export default function Verify() {
               <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
             </svg>
           </div>
-          <h2 style={styles.title}>Verify Recommendation</h2>
+          <h2 style={styles.title}>Verify Letter</h2>
           <p style={styles.sub}>Enter an ID to verify on-chain</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: "flex", gap: 8 }}>
-            <input className="form-input" value={recId} onChange={e => setRecId(e.target.value)} placeholder="Recommendation ID (e.g. 1)" required />
+            <input className="form-input" value={letterId} onChange={e => setLetterId(e.target.value)} placeholder="Letter ID (e.g. 1)" required />
             <button type="submit" disabled={loading} className="btn btn-primary" style={{ whiteSpace: "nowrap", padding: "12px 28px" }}>
               {loading ? "..." : "Verify"}
             </button>
@@ -83,8 +83,8 @@ export default function Verify() {
                 <table>
                   <tbody>
                     {[
-                      ["Student", result.studentName],
-                      ["Professor", result.professorName],
+                      ["Seeker", result.seekerName],
+                      ["Sponsor", result.sponsorName],
                       ["Title", result.title],
                       ["Created", result.createdAt],
                     ].map(([l, v]) => (
@@ -93,11 +93,11 @@ export default function Verify() {
                         <td style={{ padding: "10px 0", color: "#1c1917", fontWeight: 600 }}>{v}</td>
                       </tr>
                     ))}
-                    {result.letterIpfsHash && (
+                    {result.ipfsHash && (
                       <tr>
-                        <td style={{ padding: "10px 16px 10px 0", color: "#78716c", fontWeight: 500, verticalAlign: "top", fontSize: 12 }}>Letter Hash</td>
+                        <td style={{ padding: "10px 16px 10px 0", color: "#78716c", fontWeight: 500, verticalAlign: "top", fontSize: 12 }}>IPFS Hash</td>
                         <td style={{ padding: "10px 0" }}>
-                          <code style={{ fontSize: 12, background: "#f5f5f4", padding: "4px 8px", borderRadius: 6, wordBreak: "break-all", color: "#57534e" }}>{result.letterIpfsHash}</code>
+                          <code style={{ fontSize: 12, background: "#f5f5f4", padding: "4px 8px", borderRadius: 6, wordBreak: "break-all", color: "#57534e" }}>{result.ipfsHash}</code>
                         </td>
                       </tr>
                     )}

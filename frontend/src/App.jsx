@@ -4,8 +4,8 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
-import StudentDashboard from "./pages/StudentDashboard";
-import ProfessorDashboard from "./pages/ProfessorDashboard";
+import SeekerDashboard from "./pages/SeekerDashboard";
+import SponsorDashboard from "./pages/SponsorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Verify from "./pages/Verify";
 import "./App.css";
@@ -20,18 +20,18 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route
-              path="/student"
+              path="/seeker"
               element={
                 <ProtectedRoute requiredRole={1}>
-                  <StudentDashboard />
+                  <SeekerDashboard />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/professor"
+              path="/sponsor"
               element={
                 <ProtectedRoute requiredRole={2}>
-                  <ProfessorDashboard />
+                  <SponsorDashboard />
                 </ProtectedRoute>
               }
             />

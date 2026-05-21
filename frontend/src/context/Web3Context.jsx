@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { BrowserProvider, Contract } from "ethers";
-import contractABI from "../utils/LORSystem.json";
+import contractABI from "../utils/LetterChain.json";
 import { CONTRACT_ADDRESS, ROLES } from "../utils/constants";
 
 const Web3Context = createContext();

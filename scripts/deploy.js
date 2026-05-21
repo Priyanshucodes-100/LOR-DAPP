@@ -1,15 +1,15 @@
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying LORSystem...");
+  console.log("Deploying LetterChain...");
 
-  const LORSystem = await hre.ethers.getContractFactory("LORSystem");
-  const contract = await LORSystem.deploy();
+  const LetterChain = await hre.ethers.getContractFactory("LetterChain");
+  const contract = await LetterChain.deploy();
 
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
-  console.log("LORSystem deployed to:", address);
+  console.log("LetterChain deployed to:", address);
 
   console.log("\nWaiting for block confirmations...");
   await contract.deploymentTransaction().wait(5);

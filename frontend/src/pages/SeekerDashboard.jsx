@@ -3,11 +3,11 @@ import { QRCodeSVG } from "qrcode.react";
 import { useWeb3 } from "../context/Web3Context";
 import { STATUS_LABELS, STATUS_COLORS } from "../utils/constants";
 
-export default function StudentDashboard() {
+export default function SeekerDashboard() {
   const { contract, user } = useWeb3();
-  const [professors, setProfessors] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
-  const [selectedProfessor, setSelectedProfessor] = useState("");
+  const [sponsors, setSponsors] = useState([]);
+  const [letters, setLetters] = useState([]);
+  const [selectedSponsor, setSelectedSponsor] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -19,12 +19,12 @@ export default function StudentDashboard() {
     if (!contract) return;
     setFetching(true);
     try {
-      const [profs, recs] = await Promise.all([
-        contract.getAllProfessors(),
-        user ? contract.getStudentRecommendations(user.id) : Promise.resolve([]),
+      const [sps, ls] = await Promise.all([
+        contract.getAllSponsors(),
+        user ? contract.getSeekerLetters(user.id) : Promise.resolve([]),
       ]);
-      setProfessors(profs);
-      setRecommendations(recs);
+      setSponsors(sps);
+      setLetters(ls);
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,16 +36,16 @@ export default function StudentDashboard() {
 
   async function handleRequest(e) {
     e.preventDefault();
-    if (!contract || !selectedProfessor || !title) return;
+    if (!contract || !selectedSponsor || !title) return;
     setLoading(true);
     setError(null);
     setSuccess(null);
     try {
-      const tx = await contract.requestRecommendation(Number(selectedProfessor), title);
+      const tx = await contract.requestLetter(Number(selectedSponsor), title);
       await tx.wait();
-      setSuccess("Recommendation requested!");
+      setSuccess("Letter requested!");
       setTitle("");
-      setSelectedProfessor("");
+      setSelectedSponsor("");
       await loadData();
     } catch (err) {
       setError(err.message);
@@ -62,7 +62,7 @@ export default function StudentDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={styles.avatar}>{user?.name?.[0] || "S"}</div>
           <div>
-            <h1 className="page-title">Student Dashboard</h1>
+            <h1 className="page-title">Seeker Dashboard</h1>
             <p className="page-subtitle">Welcome back, {user?.name}</p>
           </div>
         </div>
@@ -81,10 +81,10 @@ export default function StudentDashboard() {
           </h3>
           <form onSubmit={handleRequest}>
             <div className="form-group">
-              <label className="form-label">Professor</label>
-              <select className="form-select" value={selectedProfessor} onChange={e => setSelectedProfessor(e.target.value)} required>
-                <option value="">Choose a professor...</option>
-                {professors.map(p => (
+              <label className="form-label">Sponsor</label>
+              <select className="form-select" value={selectedSponsor} onChange={e => setSelectedSponsor(e.target.value)} required>
+                <option value="">Choose a sponsor...</option>
+                {sponsors.map(p => (
                   <option key={p.id} value={Number(p.id)}>{p.name}</option>
                 ))}
               </select>
@@ -94,7 +94,7 @@ export default function StudentDashboard() {
               <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} required placeholder="e.g. Blockchain Course LOR" />
             </div>
             <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: "100%" }}>
-              {loading ? "Submitting..." : "Request Recommendation"}
+              {loading ? "Submitting..." : "Request Letter"}
             </button>
           </form>
         </div>
@@ -104,31 +104,31 @@ export default function StudentDashboard() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            History ({recommendations.length})
+            History ({letters.length})
           </div>
-          {recommendations.length === 0 ? (
-            <div className="empty-state">No recommendations yet</div>
+          {letters.length === 0 ? (
+            <div className="empty-state">No letters yet</div>
           ) : (
             <div className="table-container">
               <table>
                 <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Date</th><th></th></tr></thead>
                 <tbody>
-                  {recommendations.map(rec => (
-                    <tr key={rec.id}>
-                      <td style={{ fontWeight: 700, color: "#1c1917" }}>#{Number(rec.id)}</td>
-                      <td style={{ fontWeight: 500 }}>{rec.title}</td>
+                  {letters.map(l => (
+                    <tr key={l.id}>
+                      <td style={{ fontWeight: 700, color: "#1c1917" }}>#{Number(l.id)}</td>
+                      <td style={{ fontWeight: 500 }}>{l.title}</td>
                       <td>
-                        <span className="badge" style={{ background: STATUS_COLORS[Number(rec.status)] + "15", color: STATUS_COLORS[Number(rec.status)] }}>
-                          {STATUS_LABELS[Number(rec.status)]}
+                        <span className="badge" style={{ background: STATUS_COLORS[Number(l.status)] + "15", color: STATUS_COLORS[Number(l.status)] }}>
+                          {STATUS_LABELS[Number(l.status)]}
                         </span>
                       </td>
                       <td style={{ color: "#a8a29e", fontSize: 12 }}>
-                        {new Date(Number(rec.createdAt) * 1000).toLocaleDateString()}
+                        {new Date(Number(l.createdAt) * 1000).toLocaleDateString()}
                       </td>
                       <td>
                         <button className="btn-ghost" style={{ padding: "6px 10px", fontSize: 11, borderRadius: 6 }}
-                          onClick={() => setShowQR(showQR === Number(rec.id) ? null : Number(rec.id))}>
-                          {showQR === Number(rec.id) ? "Close" : "QR"}
+                          onClick={() => setShowQR(showQR === Number(l.id) ? null : Number(l.id))}>
+                          {showQR === Number(l.id) ? "Close" : "QR"}
                         </button>
                       </td>
                     </tr>
@@ -142,7 +142,7 @@ export default function StudentDashboard() {
 
       {showQR && (
         <div className="card" style={{ marginTop: 24, padding: 36, textAlign: "center" }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: 14, color: "#57534e" }}>Verify Recommendation #{showQR}</h3>
+          <h3 style={{ margin: "0 0 6px", fontSize: 14, color: "#57534e" }}>Verify Letter #{showQR}</h3>
           <p style={{ margin: "0 0 20px", fontSize: 12, color: "#a8a29e" }}>Scan with any QR reader</p>
           <div style={{ display: "inline-block", padding: 20, background: "white", borderRadius: 16, border: "2px solid #e7e5e4", boxShadow: "0 8px 30px rgba(0,0,0,0.06)" }}>
             <QRCodeSVG value={`${window.location.origin}/verify?id=${showQR}`} size={180} level="M" includeMargin />

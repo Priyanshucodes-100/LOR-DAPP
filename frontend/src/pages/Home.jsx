@@ -18,7 +18,7 @@ export default function Home() {
           </h1>
           <p style={styles.text}>
             Tamper-proof recommendation letters powered by Ethereum.
-            Students request, professors approve, anyone verifies.
+            Seekers request, sponsors approve, anyone verifies.
           </p>
           {!account ? (
             <p style={styles.hint}>Connect your wallet to get started</p>
@@ -26,7 +26,7 @@ export default function Home() {
             <Link to="/register" style={styles.cta}>Get Started</Link>
           ) : (
             <Link
-              to={user.role === 1 ? "/student" : user.role === 2 ? "/professor" : "/admin"}
+              to={user.role === 1 ? "/seeker" : user.role === 2 ? "/sponsor" : "/admin"}
               style={styles.cta}
             >
               Go to Dashboard
@@ -38,8 +38,8 @@ export default function Home() {
       <div className="page-container">
         <div style={styles.grid}>
           {[
-            { icon: "M12 6v6l4 2", title: "Role-Based Access", desc: "Distinct permissions for Students, Professors, and Admins with full on-chain enforcement." },
-            { icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", title: "Multi-Recommender", desc: "Students can request LORs from any professor. Track every request in real-time." },
+            { icon: "M12 6v6l4 2", title: "Role-Based Access", desc: "Distinct permissions for Seekers, Sponsors, and Admins with full on-chain enforcement." },
+            { icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", title: "Multi-Sponsor", desc: "Seekers can request letters from any sponsor. Track every request in real-time." },
             { icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z", title: "On-Chain Verify", desc: "Anyone can verify a recommendation's authenticity using its ID or QR code." },
           ].map((f, i) => (
             <div className="card" key={i} style={styles.featureCard}>

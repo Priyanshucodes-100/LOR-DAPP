@@ -4,7 +4,7 @@ import { useWeb3 } from "../context/Web3Context";
 export default function Navbar() {
   const { account, user, connectWallet, loading } = useWeb3();
 
-  const roleName = { 1: "Student", 2: "Professor", 3: "Admin" };
+  const roleName = { 1: "Seeker", 2: "Sponsor", 3: "Admin" };
   const roleColors = { 1: "#6366f1", 2: "#8b5cf6", 3: "#ef4444" };
 
   return (
@@ -16,13 +16,13 @@ export default function Navbar() {
               <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
           </div>
-          <span style={styles.logoText}>LORDApp</span>
+          <span style={styles.logoText}>LetterChain</span>
         </Link>
 
         <div style={styles.links}>
           <Link to="/verify" style={styles.link}>Verify</Link>
-          {user?.role === 1 && <Link to="/student" style={styles.link}>Dashboard</Link>}
-          {user?.role === 2 && <Link to="/professor" style={styles.link}>Dashboard</Link>}
+          {user?.role === 1 && <Link to="/seeker" style={styles.link}>Dashboard</Link>}
+          {user?.role === 2 && <Link to="/sponsor" style={styles.link}>Dashboard</Link>}
           {user?.role === 3 && <Link to="/admin" style={styles.link}>Admin</Link>}
 
           {!account ? (

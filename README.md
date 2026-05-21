@@ -1,120 +1,61 @@
-# LOR DApp v2 — Letter of Recommendation System
+# LetterChain — Letter of Recommendation on Blockchain
 
-A decentralized application (DApp) for managing Letter of Recommendation (LOR) requests on the Ethereum blockchain. Built with Solidity, Hardhat, React, and Ethers.js.
+A decentralized application (DApp) for managing recommendation letters on the Ethereum blockchain. Built with Solidity, Hardhat, React, and Ethers.js.
 
 ## Features
 
-- **Role-Based Access** — Register as Student, Professor, or Admin with distinct permissions
-- **Multi-Recommender** — Students can request LORs from multiple professors
+- **Role-Based Access** — Register as Seeker, Sponsor, or Admin with distinct permissions
+- **Multi-Sponsor** — Seekers can request letters from multiple sponsors
 - **Full Lifecycle** — Request → Approve/Reject → Submit with IPFS hash
-- **On-Chain Verification** — Anyone can verify a recommendation's authenticity using its ID
-- **Admin Controls** — Activate/deactivate users, manage the system
-- **Event Logging** — Every action emits events for transparency
+- **On-Chain Verification** — Anyone can verify a letter's authenticity using its ID
+- **QR Verification** — Each letter gets a QR code for instant verification
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Smart Contracts | Solidity 0.8.20 |
-| Development | Hardhat v2 |
-| Frontend | React + Vite + Ethers.js v6 |
-| Storage | IPFS (via Pinata or similar) |
-| Network | Ethereum Sepolia Testnet |
-| Wallet | MetaMask |
+- **Smart Contract** — Solidity ^0.8.20 (Ethereum)
+- **Framework** — Hardhat (development, testing, deployment)
+- **Frontend** — React + Vite + Ethers.js
+- **Styling** — CSS with glassmorphism, dark gradient theme
+- **Network** — Ethereum Sepolia
 
-## Project Structure
+## Roles
 
-```
-lor-dapp-v2/
-├── contracts/
-│   └── LORSystem.sol          # Main smart contract
-├── test/
-│   └── LORSystem.test.js      # Comprehensive test suite
-├── scripts/
-│   └── deploy.js              # Deployment + Etherscan verification
-├── frontend/
-│   ├── src/
-│   │   ├── pages/             # Home, Register, Dashboards, Verify
-│   │   ├── components/        # Navbar, ProtectedRoute
-│   │   ├── context/           # Web3Context (wallet + contract)
-│   │   └── utils/             # Constants, ABI
-│   └── ...
-├── hardhat.config.js
-├── package.json
-└── .env.example
-```
+| Role    | Permissions                                      |
+| ------- | ------------------------------------------------ |
+| Seeker  | Request letters from sponsors                    |
+| Sponsor | Approve/reject requests, submit IPFS hashes      |
+| Admin   | Manage users (activate/deactivate)               |
 
-## Getting Started
+## Smart Contract
 
-### Prerequisites
+Deployed at: `0xf9c858742478080D2e46c643fE19cB31a36861E9` (Sepolia)
 
-- Node.js v18+
-- MetaMask browser extension
-- Alchemy or Infura account (for Sepolia RPC)
+### Contract API
 
-### Installation
+- `registerUser(name, email, role)` — Register as Seeker (1) or Sponsor (2)
+- `requestLetter(sponsorId, title)` — Seeker requests a letter
+- `approveLetter(letterId)` / `rejectLetter(letterId)` — Sponsor responds
+- `submitLetter(letterId, ipfsHash)` — Sponsor submits final letter
+- `verifyLetter(letterId)` — Public verification
+- `getSeekerLetters(userId)` / `getSponsorLetters(userId)` — Query letters
+
+## Development
 
 ```bash
-git clone https://github.com/yourusername/LOR-DAPP.git
-cd LOR-DAPP
-
-# Install backend dependencies
+# Install
 npm install
 
-# Install frontend dependencies
-cd frontend && npm install && cd ..
-```
+# Compile
+npm run compile
 
-### Environment Setup
+# Test
+npm test
 
-Copy `.env.example` to `.env` and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-```
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
-PRIVATE_KEY=0xyour_wallet_private_key
-ETHERSCAN_API_KEY=your_etherscan_api_key
-```
-
-### Compile & Test
-
-```bash
-npm run compile    # Compile smart contracts
-npm run test       # Run test suite
-```
-
-### Deploy
-
-```bash
+# Deploy to Sepolia
 npm run deploy:sepolia
-```
 
-### Run Frontend
-
-```bash
+# Frontend
 cd frontend
+npm install
 npm run dev
 ```
-
-## Smart Contract Overview
-
-`LORSystem.sol` manages:
-
-| Function | Description |
-|----------|-------------|
-| `registerUser` | Register as Student or Professor |
-| `requestRecommendation` | Student requests LOR from a professor |
-| `approveRecommendation` | Professor approves a pending request |
-| `rejectRecommendation` | Professor rejects a pending request |
-| `submitRecommendation` | Professor submits LOR with IPFS hash |
-| `verifyRecommendation` | Public verification of any recommendation |
-| `deactivateUser` / `activateUser` | Admin user management |
-
-## Verification Flow
-
-1. Anyone visits the **Verify** page (no wallet needed)
-2. Enter a Recommendation ID
-3. View on-chain details: student name, professor name, title, status, timestamp, IPFS hash

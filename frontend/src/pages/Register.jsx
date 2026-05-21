@@ -7,7 +7,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState(ROLES.STUDENT);
+  const [role, setRole] = useState(ROLES.SEEKER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -40,7 +40,7 @@ export default function Register() {
             </svg>
           </div>
           <h2 style={styles.title}>Create Account</h2>
-          <p style={styles.sub}>Join the LOR ecosystem</p>
+          <p style={styles.sub}>Join the Letter ecosystem</p>
         </div>
 
         {!account && <div className="message" style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>Connect your wallet to register.</div>}
@@ -58,8 +58,8 @@ export default function Register() {
             <label className="form-label">Role</label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {[
-                { value: ROLES.STUDENT, label: "Student", icon: "M12 14l9-5-9-5-9 5 9 5z", sub: "Request recommendations", color: "#6366f1" },
-                { value: ROLES.PROFESSOR, label: "Professor", icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", sub: "Approve & submit LORs", color: "#8b5cf6" },
+                { value: ROLES.SEEKER, label: "Seeker", icon: "M12 14l9-5-9-5-9 5 9 5z", sub: "Request letters", color: "#6366f1" },
+                { value: ROLES.SPONSOR, label: "Sponsor", icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", sub: "Approve & submit letters", color: "#8b5cf6" },
               ].map(r => (
                 <button type="button" key={r.value} onClick={() => setRole(r.value)} style={{
                   ...styles.roleBtn,

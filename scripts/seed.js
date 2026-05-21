@@ -1,42 +1,39 @@
 const hre = require("hardhat");
 
 async function main() {
-  const [deployer, student, professor] = await hre.ethers.getSigners();
+  const [deployer, seeker, sponsor] = await hre.ethers.getSigners();
+  const CONTRACT_ADDRESS = "0x4F1fab47e4182aFd3659dBA27cc62692108FB095";
 
-  const LORSystem = await hre.ethers.getContractFactory("LORSystem");
-  const contract = await LORSystem.deploy();
-  await contract.waitForDeployment();
+  const LetterChain = await hre.ethers.getContractFactory("LetterChain");
+  const contract = LetterChain.attach(CONTRACT_ADDRESS);
 
-  const address = await contract.getAddress();
-  console.log("Contract deployed to:", address);
+  console.log("Using contract at:", CONTRACT_ADDRESS);
   console.log("Admin (deployer):", deployer.address);
-  console.log("Student account:", student.address);
-  console.log("Professor account:", professor.address);
+  console.log("Seeker account:", seeker.address);
+  console.log("Sponsor account:", sponsor.address);
 
-  const tx1 = await contract.connect(student).registerUser("Alice Student", "alice@test.com", 1);
+  const tx1 = await contract.connect(seeker).registerUser("Alice Seeker", "alice@test.com", 1);
   await tx1.wait();
-  console.log("\nStudent registered: Alice Student");
+  console.log("\nSeeker registered: Alice Seeker");
 
-  const tx2 = await contract.connect(professor).registerUser("Dr. Bob Professor", "bob@test.com", 2);
+  const tx2 = await contract.connect(sponsor).registerUser("Dr. Bob Sponsor", "bob@test.com", 2);
   await tx2.wait();
-  console.log("Professor registered: Dr. Bob Professor");
+  console.log("Sponsor registered: Dr. Bob Sponsor");
 
-  const tx3 = await contract.connect(student).requestRecommendation(3, "Blockchain Course LOR");
+  const tx3 = await contract.connect(seeker).requestLetter(3, "Blockchain Course LOR");
   await tx3.wait();
-  console.log("Recommendation #1 requested");
+  console.log("Letter #1 requested");
 
-  const tx4 = await contract.connect(professor).approveRecommendation(1);
+  const tx4 = await contract.connect(sponsor).approveLetter(1);
   await tx4.wait();
-  console.log("Recommendation #1 approved");
+  console.log("Letter #1 approved");
 
-  const tx5 = await contract.connect(professor).submitRecommendation(1, "QmTestIpfsHash123");
+  const tx5 = await contract.connect(sponsor).submitLetter(1, "QmTestIpfsHash123");
   await tx5.wait();
-  console.log("Recommendation #1 submitted with IPFS hash");
+  console.log("Letter #1 submitted with IPFS hash");
 
   console.log("\n--- Test Data Ready ---");
-  console.log("Contract Address:", address);
-  console.log("Student (import in MetaMask):", student.privateKey);
-  console.log("Professor (import in MetaMask):", professor.privateKey);
+  console.log("Contract Address:", CONTRACT_ADDRESS);
 }
 
 main().catch((error) => {
