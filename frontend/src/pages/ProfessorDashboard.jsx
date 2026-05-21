@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useWeb3 } from "../context/Web3Context";
-import { STATUS, STATUS_LABELS, STATUS_COLORS } from "../utils/constants";
+import { STATUS_LABELS, STATUS_COLORS } from "../utils/constants";
 
 export default function ProfessorDashboard() {
   const { contract, user } = useWeb3();
@@ -8,8 +9,8 @@ export default function ProfessorDashboard() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(null);
-  const [submitting, setSubmitting] = useState(null);
-  const [ipfsHash, setIpfsHash] = useState("");
+  const [ipfsInputs, setIpfsInputs] = useState({});
+  const [showQR, setShowQR] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!contract || !user) return;
@@ -24,144 +25,120 @@ export default function ProfessorDashboard() {
     }
   }, [contract, user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  async function handleApprove(recId) {
+  async function handleAction(recId, action) {
     setLoading(true);
     setError(null);
     try {
-      const tx = await contract.approveRecommendation(recId);
+      const tx = action === "approve" ? await contract.approveRecommendation(recId) : await contract.rejectRecommendation(recId);
       await tx.wait();
       await loadData();
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleReject(recId) {
-    setLoading(true);
-    setError(null);
-    try {
-      const tx = await contract.rejectRecommendation(recId);
-      await tx.wait();
-      await loadData();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   async function handleSubmit(recId) {
-    if (!ipfsHash.trim()) return;
-    setSubmitting(recId);
+    const hash = ipfsInputs[recId];
+    if (!hash?.trim()) return;
+    setLoading(true);
     setError(null);
     try {
-      const tx = await contract.submitRecommendation(recId, ipfsHash.trim());
+      const tx = await contract.submitRecommendation(recId, hash.trim());
       await tx.wait();
-      setIpfsHash("");
+      setIpfsInputs(prev => ({ ...prev, [recId]: "" }));
       await loadData();
     } catch (err) {
       setError(err.message);
-    } finally {
-      setSubmitting(null);
-    }
+    } finally { setLoading(false); }
   }
 
-  if (fetching) {
-    return (
-      <div style={styles.wrapper}>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (fetching) return <div className="page-container" style={{ textAlign: "center", paddingTop: 80, color: "#a8a29e" }}>Loading...</div>;
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.pageTitle}>Professor Dashboard</h2>
-      <p style={styles.welcome}>Welcome, {user?.name}</p>
+    <div className="page-container">
+      <div className="page-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={styles.avatar}>{user?.name?.[0] || "P"}</div>
+          <div>
+            <h1 className="page-title">Professor Dashboard</h1>
+            <p className="page-subtitle">Welcome, {user?.name}</p>
+          </div>
+        </div>
+      </div>
 
-      {error && <p style={styles.error}>{error}</p>}
+      {error && <div className="message message-error">{error}</div>}
 
       {recommendations.length === 0 ? (
-        <p style={styles.empty}>No recommendations received yet.</p>
+        <div className="card" style={{ padding: 60, textAlign: "center" }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d6d3d1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16 }}>
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <p style={{ color: "#a8a29e", fontSize: 15 }}>No recommendations yet</p>
+        </div>
       ) : (
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>ID</th>
-                <th style={styles.th}>Student</th>
-                <th style={styles.th}>Title</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recommendations.map((rec) => (
-                <tr key={rec.id}>
-                  <td style={styles.td}>{Number(rec.id)}</td>
-                  <td style={styles.td}>Student #{Number(rec.studentId)}</td>
-                  <td style={styles.td}>{rec.title}</td>
-                  <td style={styles.td}>
-                    <span
-                      style={{
-                        ...styles.statusBadge,
-                        background: STATUS_COLORS[Number(rec.status)] || "#94a3b8",
-                      }}
-                    >
-                      {STATUS_LABELS[Number(rec.status)]}
-                    </span>
-                  </td>
-                  <td style={styles.td}>
-                    {new Date(Number(rec.createdAt) * 1000).toLocaleDateString()}
-                  </td>
-                  <td style={styles.td}>
-                    {Number(rec.status) === 0 && (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button
-                          onClick={() => handleApprove(Number(rec.id))}
-                          disabled={loading}
-                          style={styles.approveBtn}
-                        >
-                          Approve
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Student</th><th>Title</th><th>Status</th><th>Date</th><th style={{ minWidth: 210 }}>Actions</th></tr>
+              </thead>
+              <tbody>
+                {recommendations.map(rec => (
+                  <tr key={rec.id}>
+                    <td style={{ fontWeight: 700, color: "#1c1917" }}>#{Number(rec.id)}</td>
+                    <td>Student #{Number(rec.studentId)}</td>
+                    <td style={{ fontWeight: 500 }}>{rec.title}</td>
+                    <td>
+                      <span className="badge" style={{ background: STATUS_COLORS[Number(rec.status)] + "15", color: STATUS_COLORS[Number(rec.status)] }}>
+                        {STATUS_LABELS[Number(rec.status)]}
+                      </span>
+                    </td>
+                    <td style={{ color: "#a8a29e", fontSize: 12 }}>
+                      {new Date(Number(rec.createdAt) * 1000).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {Number(rec.status) === 0 && (
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button className="btn btn-success" style={{ padding: "6px 16px", fontSize: 12 }} onClick={() => handleAction(Number(rec.id), "approve")} disabled={loading}>Approve</button>
+                          <button className="btn btn-danger" style={{ padding: "6px 16px", fontSize: 12 }} onClick={() => handleAction(Number(rec.id), "reject")} disabled={loading}>Reject</button>
+                        </div>
+                      )}
+                      {Number(rec.status) === 1 && (
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <input className="form-input" style={{ width: 130, padding: "6px 10px", fontSize: 12 }} placeholder="IPFS hash"
+                            value={ipfsInputs[Number(rec.id)] || ""}
+                            onChange={e => setIpfsInputs(prev => ({ ...prev, [Number(rec.id)]: e.target.value }))} />
+                          <button className="btn btn-primary" style={{ padding: "6px 16px", fontSize: 12 }}
+                            onClick={() => handleSubmit(Number(rec.id))} disabled={loading || !ipfsInputs[Number(rec.id)]?.trim()}>Submit</button>
+                        </div>
+                      )}
+                      {Number(rec.status) === 3 && (
+                        <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6 }}
+                          onClick={() => setShowQR(showQR === Number(rec.id) ? null : Number(rec.id))}>
+                          {showQR === Number(rec.id) ? "Close" : "QR"}
                         </button>
-                        <button
-                          onClick={() => handleReject(Number(rec.id))}
-                          disabled={loading}
-                          style={styles.rejectBtn}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                    {Number(rec.status) === 1 && (
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <input
-                          style={styles.ipfsInput}
-                          placeholder="IPFS hash"
-                          value={ipfsHash}
-                          onChange={(e) => setIpfsHash(e.target.value)}
-                        />
-                        <button
-                          onClick={() => handleSubmit(Number(rec.id))}
-                          disabled={submitting === Number(rec.id)}
-                          style={styles.submitBtn}
-                        >
-                          {submitting === Number(rec.id) ? "..." : "Submit"}
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showQR && (
+        <div className="card" style={{ marginTop: 24, padding: 36, textAlign: "center" }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 14, color: "#57534e" }}>Verify Recommendation #{showQR}</h3>
+          <p style={{ margin: "0 0 20px", fontSize: 12, color: "#a8a29e" }}>Scan with any QR reader</p>
+          <div style={{ display: "inline-block", padding: 20, background: "white", borderRadius: 16, border: "2px solid #e7e5e4" }}>
+            <QRCodeSVG value={`${window.location.origin}/verify?id=${showQR}`} size={200} level="M" includeMargin />
+          </div>
+          <p style={{ marginTop: 16, fontSize: 11, color: "#a8a29e", wordBreak: "break-all" }}>
+            {`${window.location.origin}/verify?id=${showQR}`}
+          </p>
         </div>
       )}
     </div>
@@ -169,59 +146,18 @@ export default function ProfessorDashboard() {
 }
 
 const styles = {
-  wrapper: { display: "flex", justifyContent: "center", padding: 60, color: "#64748b" },
-  container: { maxWidth: 1100, margin: "0 auto", padding: "32px 24px" },
-  pageTitle: { margin: 0, color: "#0f172a" },
-  welcome: { color: "#64748b", margin: "4px 0 24px" },
-  error: { color: "#ef4444", fontSize: 13, marginBottom: 16, padding: "8px 12px", background: "#fef2f2", borderRadius: 6 },
-  empty: { textAlign: "center", color: "#94a3b8", padding: 40, fontSize: 15 },
-  tableWrap: { overflowX: "auto" },
-  table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
-  th: { textAlign: "left", padding: "10px 12px", borderBottom: "2px solid #e2e8f0", color: "#64748b" },
-  td: { padding: "12px", borderBottom: "1px solid #f1f5f9" },
-  statusBadge: {
-    display: "inline-block",
-    padding: "3px 10px",
-    borderRadius: 12,
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: 600,
-  },
-  approveBtn: {
-    background: "#22c55e",
-    color: "#fff",
-    border: "none",
-    padding: "5px 14px",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  rejectBtn: {
-    background: "#ef4444",
-    color: "#fff",
-    border: "none",
-    padding: "5px 14px",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  submitBtn: {
-    background: "#3b82f6",
-    color: "#fff",
-    border: "none",
-    padding: "5px 14px",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  ipfsInput: {
-    padding: "5px 8px",
-    border: "1px solid #cbd5e1",
-    borderRadius: 4,
-    fontSize: 12,
-    width: 140,
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 20,
+    fontWeight: 700,
+    boxShadow: "0 4px 14px rgba(139,92,246,0.3)",
+    flexShrink: 0,
   },
 };

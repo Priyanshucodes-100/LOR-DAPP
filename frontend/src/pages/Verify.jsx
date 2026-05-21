@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { BrowserProvider, Contract } from "ethers";
 import contractABI from "../utils/LORSystem.json";
 import { CONTRACT_ADDRESS, STATUS_LABELS, STATUS_COLORS } from "../utils/constants";
@@ -9,110 +10,111 @@ export default function Verify() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function handleVerify(e) {
-    e.preventDefault();
-    if (!recId.trim()) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (id) { setRecId(id); handleVerify(id); }
+  }, []);
 
+  async function handleVerify(id) {
+    const rid = id || recId;
+    if (!rid?.trim()) return;
+    setLoading(true); setError(null); setResult(null);
     try {
-      let contract;
-      if (window.ethereum) {
-        const provider = new BrowserProvider(window.ethereum);
-        contract = new Contract(CONTRACT_ADDRESS, contractABI, provider);
-      } else {
-        setError("Please install MetaMask or use a Web3 wallet.");
-        return;
-      }
-
-      const data = await contract.verifyRecommendation(recId);
+      if (!window.ethereum) { setError("MetaMask not found"); return; }
+      const provider = new BrowserProvider(window.ethereum);
+      const contract = new Contract(CONTRACT_ADDRESS, contractABI, provider);
+      const d = await contract.verifyRecommendation(rid);
       setResult({
-        studentName: data.studentName,
-        professorName: data.professorName,
-        title: data.title,
-        letterIpfsHash: data.letterIpfsHash,
-        status: Number(data.status),
-        createdAt: new Date(Number(data.createdAt) * 1000).toLocaleDateString(),
+        id: rid, studentName: d.studentName, professorName: d.professorName,
+        title: d.title, letterIpfsHash: d.letterIpfsHash,
+        status: Number(d.status),
+        createdAt: new Date(Number(d.createdAt) * 1000).toLocaleDateString(),
       });
-    } catch (err) {
-      setError(err.message || "Recommendation not found");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message || "Not found"); } finally { setLoading(false); }
   }
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Verify Recommendation</h2>
-        <p style={styles.subtitle}>
-          Enter a Recommendation ID to verify its authenticity on-chain.
-        </p>
+  function handleSubmit(e) { e.preventDefault(); handleVerify(); }
 
-        <form onSubmit={handleVerify}>
-          <div style={styles.field}>
-            <input
-              style={styles.input}
-              value={recId}
-              onChange={(e) => setRecId(e.target.value)}
-              placeholder="Enter recommendation ID..."
-              required
-            />
-            <button type="submit" disabled={loading} style={styles.btn}>
-              {loading ? "Checking..." : "Verify"}
+  return (
+    <div style={styles.page}>
+      <div className="card" style={styles.card}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={styles.icon}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+            </svg>
+          </div>
+          <h2 style={styles.title}>Verify Recommendation</h2>
+          <p style={styles.sub}>Enter an ID to verify on-chain</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" value={recId} onChange={e => setRecId(e.target.value)} placeholder="Recommendation ID (e.g. 1)" required />
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ whiteSpace: "nowrap", padding: "12px 28px" }}>
+              {loading ? "..." : "Verify"}
             </button>
           </div>
         </form>
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && <div className="message message-error" style={{ marginTop: 20 }}>{error}</div>}
 
         {result && (
-          <div style={styles.resultCard}>
-            <h3 style={{ margin: "0 0 16px", color: "#0f172a" }}>
-              Recommendation #{recId}
-            </h3>
-            <table style={styles.table}>
-              <tbody>
-                <tr>
-                  <td style={styles.label}>Student</td>
-                  <td style={styles.value}>{result.studentName}</td>
-                </tr>
-                <tr>
-                  <td style={styles.label}>Professor</td>
-                  <td style={styles.value}>{result.professorName}</td>
-                </tr>
-                <tr>
-                  <td style={styles.label}>Title</td>
-                  <td style={styles.value}>{result.title}</td>
-                </tr>
-                <tr>
-                  <td style={styles.label}>Status</td>
-                  <td style={styles.value}>
-                    <span
-                      style={{
-                        ...styles.badge,
-                        background: STATUS_COLORS[result.status] || "#94a3b8",
-                      }}
-                    >
-                      {STATUS_LABELS[result.status] || "Unknown"}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style={styles.label}>Created</td>
-                  <td style={styles.value}>{result.createdAt}</td>
-                </tr>
-                {result.letterIpfsHash && (
-                  <tr>
-                    <td style={styles.label}>Letter Hash</td>
-                    <td style={styles.value}>
-                      <code style={styles.hash}>{result.letterIpfsHash}</code>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div style={{ marginTop: 28 }}>
+            <div style={styles.verified}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 20 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#065f46", letterSpacing: "-0.03em" }}>
+                      Verified — #{result.id}
+                    </h3>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: "#10b981" }}>Authentic on-chain record</p>
+                </div>
+                <span className="badge" style={{ background: STATUS_COLORS[result.status] + "15", color: STATUS_COLORS[result.status], padding: "6px 14px", fontSize: 12 }}>
+                  {STATUS_LABELS[result.status]}
+                </span>
+              </div>
+              <div className="table-container">
+                <table>
+                  <tbody>
+                    {[
+                      ["Student", result.studentName],
+                      ["Professor", result.professorName],
+                      ["Title", result.title],
+                      ["Created", result.createdAt],
+                    ].map(([l, v]) => (
+                      <tr key={l}>
+                        <td style={{ padding: "10px 16px 10px 0", color: "#78716c", fontWeight: 500, width: 100, fontSize: 12 }}>{l}</td>
+                        <td style={{ padding: "10px 0", color: "#1c1917", fontWeight: 600 }}>{v}</td>
+                      </tr>
+                    ))}
+                    {result.letterIpfsHash && (
+                      <tr>
+                        <td style={{ padding: "10px 16px 10px 0", color: "#78716c", fontWeight: 500, verticalAlign: "top", fontSize: 12 }}>Letter Hash</td>
+                        <td style={{ padding: "10px 0" }}>
+                          <code style={{ fontSize: 12, background: "#f5f5f4", padding: "4px 8px", borderRadius: 6, wordBreak: "break-all", color: "#57534e" }}>{result.letterIpfsHash}</code>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 28 }}>
+              <h4 style={{ margin: "0 0 14px", fontSize: 13, color: "#78716c", fontWeight: 500 }}>Share QR for instant verification</h4>
+              <div style={{ display: "inline-block", padding: 20, background: "white", borderRadius: 16, border: "2px solid #e7e5e4", boxShadow: "0 8px 30px rgba(0,0,0,0.06)" }}>
+                <QRCodeSVG value={`${window.location.origin}/verify?id=${result.id}`} size={180} level="M" includeMargin />
+              </div>
+              <p style={{ marginTop: 14, fontSize: 11, color: "#a8a29e", wordBreak: "break-all" }}>
+                {`${window.location.origin}/verify?id=${result.id}`}
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -121,62 +123,20 @@ export default function Verify() {
 }
 
 const styles = {
-  container: {
-    maxWidth: 560,
-    margin: "0 auto",
-    padding: "60px 24px",
+  page: { maxWidth: 560, margin: "0 auto", padding: "60px 24px" },
+  card: { padding: 36 },
+  icon: {
+    width: 56, height: 56, borderRadius: 16,
+    background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    color: "#10b981", margin: "0 auto 16px",
   },
-  card: {
-    background: "#fff",
-    padding: 32,
-    borderRadius: 12,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    border: "1px solid #e2e8f0",
-  },
-  title: { margin: "0 0 8px", color: "#0f172a" },
-  subtitle: { margin: "0 0 24px", color: "#64748b", fontSize: 14 },
-  field: { display: "flex", gap: 8 },
-  input: {
-    flex: 1,
-    padding: "10px 12px",
-    border: "1px solid #cbd5e1",
-    borderRadius: 6,
-    fontSize: 14,
-  },
-  btn: {
-    padding: "10px 24px",
-    background: "#3b82f6",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  error: { color: "#ef4444", fontSize: 13, marginTop: 16 },
-  resultCard: {
-    marginTop: 24,
-    padding: 20,
-    background: "#f8fafc",
-    borderRadius: 8,
-    border: "1px solid #e2e8f0",
-  },
-  table: { width: "100%", fontSize: 13 },
-  label: { padding: "8px 12px 8px 0", color: "#64748b", fontWeight: 500, width: 120, verticalAlign: "top" },
-  value: { padding: "8px 0", color: "#0f172a" },
-  badge: {
-    display: "inline-block",
-    padding: "3px 10px",
-    borderRadius: 12,
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: 600,
-  },
-  hash: {
-    fontSize: 12,
-    background: "#f1f5f9",
-    padding: "3px 8px",
-    borderRadius: 4,
-    wordBreak: "break-all",
+  title: { margin: "0 0 4px", fontSize: 22, fontWeight: 800, color: "#1c1917", letterSpacing: "-0.04em" },
+  sub: { margin: 0, fontSize: 14, color: "#a8a29e" },
+  verified: {
+    padding: 24,
+    background: "linear-gradient(135deg, #f0fdf4, #fafafa)",
+    borderRadius: 14,
+    border: "1px solid #bbf7d0",
   },
 };

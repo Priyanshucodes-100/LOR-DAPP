@@ -10,12 +10,8 @@ export default function Register() {
   const [role, setRole] = useState(ROLES.STUDENT);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
 
-  if (user) {
-    navigate("/");
-    return null;
-  }
+  if (user) { navigate("/"); return null; }
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -25,9 +21,8 @@ export default function Register() {
     try {
       const tx = await contract.registerUser(name, email, role);
       await tx.wait();
-      setSuccess(true);
       await refreshUser();
-      setTimeout(() => navigate("/"), 1500);
+      navigate("/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,71 +30,56 @@ export default function Register() {
     }
   }
 
-  if (success) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.successBox}>
-          <h2>Registration Successful!</h2>
-          <p>Redirecting to home...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Register</h2>
-        <p style={styles.subtitle}>
-          Connect your wallet first, then register as a Student or Professor.
-        </p>
+    <div style={styles.page}>
+      <div className="card" style={styles.card}>
+        <div style={styles.header}>
+          <div style={styles.icon}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <h2 style={styles.title}>Create Account</h2>
+          <p style={styles.sub}>Join the LOR ecosystem</p>
+        </div>
 
-        {!account && <p style={styles.warn}>Please connect your wallet.</p>}
+        {!account && <div className="message" style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>Connect your wallet to register.</div>}
 
         <form onSubmit={handleRegister}>
-          <div style={styles.field}>
-            <label style={styles.label}>Name</label>
-            <input
-              style={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Your full name"
-            />
+          <div className="form-group">
+            <label className="form-label">Name</label>
+            <input className="form-input" value={name} onChange={e => setName(e.target.value)} required placeholder="Your full name" />
           </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input
-              style={styles.input}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="your@email.com"
-            />
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" />
           </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Role</label>
-            <select
-              style={styles.select}
-              value={role}
-              onChange={(e) => setRole(Number(e.target.value))}
-            >
-              <option value={ROLES.STUDENT}>Student</option>
-              <option value={ROLES.PROFESSOR}>Professor</option>
-            </select>
+          <div className="form-group">
+            <label className="form-label">Role</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[
+                { value: ROLES.STUDENT, label: "Student", icon: "M12 14l9-5-9-5-9 5 9 5z", sub: "Request recommendations", color: "#6366f1" },
+                { value: ROLES.PROFESSOR, label: "Professor", icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z", sub: "Approve & submit LORs", color: "#8b5cf6" },
+              ].map(r => (
+                <button type="button" key={r.value} onClick={() => setRole(r.value)} style={{
+                  ...styles.roleBtn,
+                  background: role === r.value ? "white" : "transparent",
+                  borderColor: role === r.value ? r.color : "#e7e5e4",
+                  boxShadow: role === r.value ? `0 4px 20px ${r.color}20` : "none",
+                  transform: role === r.value ? "translateY(-2px)" : "none",
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={role === r.value ? r.color : "#a8a29e"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={r.icon} />
+                  </svg>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: role === r.value ? r.color : "#57534e" }}>{r.label}</span>
+                  <span style={{ fontSize: 11, color: role === r.value ? r.color : "#a8a29e", opacity: role === r.value ? 1 : 0.7 }}>{r.sub}</span>
+                </button>
+              ))}
+            </div>
           </div>
-
-          {error && <p style={styles.error}>{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading || !account}
-            style={styles.btn}
-          >
-            {loading ? "Registering..." : "Register"}
+          {error && <div className="message message-error">{error}</div>}
+          <button type="submit" disabled={loading || !account} className="btn btn-primary" style={{ width: "100%", padding: "13px", fontSize: 15, marginTop: 8 }}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
       </div>
@@ -108,59 +88,52 @@ export default function Register() {
 }
 
 const styles = {
-  container: {
-    maxWidth: 480,
+  page: {
+    maxWidth: 460,
     margin: "0 auto",
     padding: "60px 24px",
   },
   card: {
-    background: "#fff",
-    padding: 32,
-    borderRadius: 12,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    border: "1px solid #e2e8f0",
-  },
-  title: { margin: "0 0 8px", color: "#0f172a" },
-  subtitle: { margin: "0 0 24px", color: "#64748b", fontSize: 14 },
-  warn: { color: "#ef4444", fontSize: 14, marginBottom: 16 },
-  field: { marginBottom: 16 },
-  label: { display: "block", marginBottom: 6, fontSize: 14, color: "#334155", fontWeight: 500 },
-  input: {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #cbd5e1",
-    borderRadius: 6,
-    fontSize: 14,
-    boxSizing: "border-box",
-  },
-  select: {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #cbd5e1",
-    borderRadius: 6,
-    fontSize: 14,
-    background: "#fff",
-    boxSizing: "border-box",
-  },
-  error: { color: "#ef4444", fontSize: 13, marginBottom: 12 },
-  btn: {
-    width: "100%",
-    padding: "12px",
-    background: "#3b82f6",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: "pointer",
-    marginTop: 8,
-  },
-  successBox: {
-    textAlign: "center",
     padding: 40,
-    background: "#f0fdf4",
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: 32,
+  },
+  icon: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    background: "linear-gradient(135deg, #eef2ff, #ede9fe)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#6366f1",
+    margin: "0 auto 16px",
+  },
+  title: {
+    margin: "0 0 4px",
+    fontSize: 22,
+    fontWeight: 800,
+    color: "#1c1917",
+    letterSpacing: "-0.04em",
+  },
+  sub: {
+    margin: 0,
+    fontSize: 14,
+    color: "#a8a29e",
+  },
+  roleBtn: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 8,
+    padding: "20px 16px",
+    border: "2px solid #e7e5e4",
     borderRadius: 12,
-    border: "1px solid #bbf7d0",
-    color: "#166534",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 600,
+    transition: "all 0.3s",
   },
 };
