@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useWeb3 } from "../context/Web3Context";
 
 export default function Navbar() {
-  const { account, user, connectWallet, loading } = useWeb3();
+  const { account, user, connectWallet, loading, error } = useWeb3();
 
   const roleName = { 1: "Seeker", 2: "Sponsor", 3: "Admin" };
   const roleColors = { 1: "#6366f1", 2: "#8b5cf6", 3: "#ef4444" };
@@ -25,6 +25,7 @@ export default function Navbar() {
           {user?.role === 2 && <Link to="/sponsor" style={styles.link}>Dashboard</Link>}
           {user?.role === 3 && <Link to="/admin" style={styles.link}>Admin</Link>}
 
+          {error && <div style={{ color: "#ef4444", fontSize: 12, background: "#fef2f2", padding: "6px 12px", borderRadius: 8, maxWidth: 240, wordBreak: "break-word" }}>{error}</div>}
           {!account ? (
             <button onClick={connectWallet} disabled={loading} style={styles.btn}>
               {loading ? (
